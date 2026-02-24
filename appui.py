@@ -1,4 +1,4 @@
-# app_ui.py — Streamlit Dashboard for ModelOps Heart Disease Prediction
+# appui.py — Streamlit Dashboard for ModelOps Heart Disease Prediction
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -16,7 +16,97 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ── Custom CSS ────────────────────────────────────────────────
+# ── Authentication ────────────────────────────────────────────
+USERS = {
+    "admin":  {"name": "Admin User",    "password": "admin123"},
+    "doctor": {"name": "Dr. Puja",      "password": "doctor123"},
+    "panel":  {"name": "Panel Member",  "password": "panel123"}
+}
+
+def check_password(username, password):
+    if username not in USERS:
+        return False
+    return USERS[username]["password"] == password
+
+def show_login():
+    st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+    html, body, [class*="css"] {
+        font-family: 'DM Sans', sans-serif;
+        background-color: #0D1117;
+        color: #E6EDF3;
+    }
+    .main { background-color: #0D1117; }
+    #MainMenu, footer, header { visibility: hidden; }
+    .stTextInput > div > div > input {
+        background: #0D1117 !important;
+        border: 1px solid #30363D !important;
+        border-radius: 8px !important;
+        color: #E6EDF3 !important;
+    }
+    .stButton > button {
+        background: #E63946 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-family: 'Space Mono', monospace !important;
+        width: 100% !important;
+        padding: 0.6rem !important;
+        margin-top: 0.5rem !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Center the login box
+    col1, col2, col3 = st.columns([1, 1.2, 1])
+    with col2:
+        st.markdown("<div style='height: 8vh'></div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style='background:#161B22; border:1px solid #30363D; border-radius:14px;
+                    padding:2.5rem 2rem; text-align:center;'>
+            <div style='font-size:3rem; margin-bottom:0.5rem'>🫀</div>
+            <p style='font-family: Space Mono, monospace; font-size:1.2rem;
+                      font-weight:700; color:#E6EDF3; margin:0;'>
+                Heart Disease ModelOps
+            </p>
+            <p style='color:#8B949E; font-size:0.82rem; margin-top:0.3rem;
+                      margin-bottom:1.5rem;'>
+                Sign in to access the dashboard
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        username = st.text_input("Username", placeholder="Enter username")
+        password = st.text_input("Password", type="password", placeholder="Enter password")
+        login_btn = st.button("🔐 Sign In")
+
+        if login_btn:
+            if check_password(username, password):
+                st.session_state["logged_in"] = True
+                st.session_state["username"] = username
+                st.session_state["name"] = USERS[username]["name"]
+                st.rerun()
+            else:
+                st.error("❌ Invalid username or password")
+
+        st.markdown("""
+        <div style='margin-top:1.5rem; font-size:0.75rem; color:#8B949E; text-align:center;'>
+            Demo credentials<br>
+            <b style='color:#58A6FF'>doctor</b> / doctor123 &nbsp;|&nbsp;
+            <b style='color:#58A6FF'>panel</b> / panel123
+        </div>
+        """, unsafe_allow_html=True)
+
+# ── Auth gate ─────────────────────────────────────────────────
+if "logged_in" not in st.session_state:
+    st.session_state["logged_in"] = False
+
+if not st.session_state["logged_in"]:
+    show_login()
+    st.stop()
+
+# ── Custom CSS (only loads after login) ───────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -41,11 +131,8 @@ html, body, [class*="css"] {
 
 .main { background-color: var(--dark); }
 .block-container { padding: 2rem 2rem 2rem 2rem; }
-
-/* Hide default streamlit elements */
 #MainMenu, footer, header { visibility: hidden; }
 
-/* Header */
 .hero {
     background: linear-gradient(135deg, #1a0a0a 0%, #0D1117 50%, #0a1a2a 100%);
     border: 1px solid var(--border);
@@ -81,7 +168,6 @@ html, body, [class*="css"] {
     font-weight: 300;
 }
 
-/* Metric cards */
 .metric-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -104,7 +190,6 @@ html, body, [class*="css"] {
     margin-top: 0.3rem;
 }
 
-/* Section headers */
 .section-header {
     font-family: 'Space Mono', monospace;
     font-size: 0.8rem;
@@ -116,7 +201,6 @@ html, body, [class*="css"] {
     margin-bottom: 1.2rem;
 }
 
-/* Result cards */
 .result-positive {
     background: linear-gradient(135deg, #1a0a0a, #200d0d);
     border: 1px solid var(--red);
@@ -137,12 +221,8 @@ html, body, [class*="css"] {
     font-weight: 700;
     margin: 0.5rem 0;
 }
-.result-confidence {
-    font-size: 0.85rem;
-    color: var(--muted);
-}
+.result-confidence { font-size: 0.85rem; color: var(--muted); }
 
-/* Status badges */
 .badge-green {
     background: rgba(63,185,80,0.15);
     color: var(--green);
@@ -161,17 +241,7 @@ html, body, [class*="css"] {
     font-size: 0.75rem;
     font-family: 'Space Mono', monospace;
 }
-.badge-yellow {
-    background: rgba(210,153,34,0.15);
-    color: var(--yellow);
-    border: 1px solid rgba(210,153,34,0.3);
-    border-radius: 20px;
-    padding: 0.2rem 0.8rem;
-    font-size: 0.75rem;
-    font-family: 'Space Mono', monospace;
-}
 
-/* Pipeline steps */
 .pipeline-step {
     background: var(--card);
     border: 1px solid var(--border);
@@ -189,23 +259,18 @@ html, body, [class*="css"] {
     min-width: 30px;
 }
 
-/* Sidebar */
 section[data-testid="stSidebar"] {
     background-color: var(--card);
     border-right: 1px solid var(--border);
 }
-section[data-testid="stSidebar"] .block-container {
-    padding: 1.5rem 1rem;
-}
+section[data-testid="stSidebar"] .block-container { padding: 1.5rem 1rem; }
 
-/* Inputs */
 .stSlider > div > div { background: var(--border) !important; }
 .stSelectbox > div > div {
     background: var(--card) !important;
     border-color: var(--border) !important;
 }
 
-/* Buttons */
 .stButton > button {
     background: var(--red) !important;
     color: white !important;
@@ -219,7 +284,6 @@ section[data-testid="stSidebar"] .block-container {
 }
 .stButton > button:hover { opacity: 0.85 !important; }
 
-/* Log box */
 .log-box {
     background: #010409;
     border: 1px solid var(--border);
@@ -245,7 +309,6 @@ def load_artifacts():
         mm_scaler  = pickle.load(open("models/minmax_scaler.pkl",  "rb"))
         return model, std_scaler, mm_scaler, True
     except Exception as e:
-        # Fallback: load directly from mlruns pickle
         try:
             import glob
             pkl_files = glob.glob("mlruns/**/model.pkl", recursive=True)
@@ -263,11 +326,23 @@ model, std_scaler, mm_scaler, model_loaded = load_artifacts()
 # ── Sidebar Navigation ────────────────────────────────────────
 with st.sidebar:
     st.markdown("""
-    <div style='font-family: Space Mono, monospace; font-size: 1rem; 
-         font-weight: 700; color: #E63946; margin-bottom: 1.5rem;'>
+    <div style='font-family: Space Mono, monospace; font-size: 1rem;
+         font-weight: 700; color: #E63946; margin-bottom: 0.5rem;'>
         🫀 MODELOPS
     </div>
     """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div style='font-size:0.78rem; color:#8B949E; margin-bottom:1rem;'>
+        Welcome, <b style='color:#58A6FF'>{st.session_state.get('name', '')}</b>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.button("🚪 Logout"):
+        st.session_state["logged_in"] = False
+        st.rerun()
+
+    st.markdown("---")
 
     page = st.radio(
         "Navigate",
@@ -306,7 +381,6 @@ if page == "🏠 Dashboard":
     </div>
     """, unsafe_allow_html=True)
 
-    # Metrics row
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.markdown("""
@@ -335,18 +409,17 @@ if page == "🏠 Dashboard":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Pipeline + Tech Stack
     col1, col2 = st.columns([3, 2])
 
     with col1:
         st.markdown("<p class='section-header'>Automated Pipeline</p>", unsafe_allow_html=True)
         steps = [
-            ("01", "🟢", "Data Ingestion", "Load reference & current patient data"),
+            ("01", "🟢", "Data Ingestion",  "Load reference & current patient data"),
             ("02", "🟢", "Drift Detection", "Evidently AI checks distribution shift"),
             ("03", "🟢", "Auto Retraining", "Model retrained on new data if drift > 20%"),
-            ("04", "🟢", "Evaluation", "New model accuracy compared to threshold"),
-            ("05", "🟢", "Promotion", "Best model promoted to Production in MLflow"),
-            ("06", "🟢", "API Serving", "FastAPI serves predictions in real-time"),
+            ("04", "🟢", "Evaluation",      "New model accuracy compared to threshold"),
+            ("05", "🟢", "Promotion",       "Best model promoted to Production in MLflow"),
+            ("06", "🟢", "API Serving",     "FastAPI serves predictions in real-time"),
         ]
         for num, icon, title, desc in steps:
             st.markdown(f"""
@@ -363,11 +436,11 @@ if page == "🏠 Dashboard":
         st.markdown("<p class='section-header'>Tech Stack</p>", unsafe_allow_html=True)
         stack = [
             ("🤖", "Random Forest", "ML Model"),
-            ("📊", "MLflow", "Experiment Tracking"),
-            ("🔍", "Evidently AI", "Drift Detection"),
-            ("⚡", "FastAPI", "Model Serving"),
-            ("🔄", "GitHub Actions", "CI/CD Pipeline"),
-            ("🎯", "Streamlit", "Dashboard UI"),
+            ("📊", "MLflow",        "Experiment Tracking"),
+            ("🔍", "Evidently AI",  "Drift Detection"),
+            ("⚡", "FastAPI",       "Model Serving"),
+            ("🔄", "GitHub Actions","CI/CD Pipeline"),
+            ("🎯", "Streamlit",     "Dashboard UI"),
         ]
         for icon, name, role in stack:
             st.markdown(f"""
@@ -405,8 +478,7 @@ elif page == "🔬 Predict":
             sex = st.selectbox("Sex", [0, 1], format_func=lambda x: "Female" if x == 0 else "Male")
         with r1c3:
             chest_pain = st.selectbox("Chest Pain Type", [0, 1, 2, 3],
-                format_func=lambda x: ["Typical Angina", "Atypical Angina",
-                                       "Non-Anginal", "Asymptomatic"][x])
+                format_func=lambda x: ["Typical Angina","Atypical Angina","Non-Anginal","Asymptomatic"][x])
 
         r2c1, r2c2, r2c3 = st.columns(3)
         with r2c1:
@@ -420,7 +492,7 @@ elif page == "🔬 Predict":
         r3c1, r3c2, r3c3 = st.columns(3)
         with r3c1:
             resting_ecg = st.selectbox("Resting ECG", [0, 1, 2],
-                format_func=lambda x: ["Normal", "ST-T Abnormality", "LV Hypertrophy"][x])
+                format_func=lambda x: ["Normal","ST-T Abnormality","LV Hypertrophy"][x])
         with r3c2:
             max_hr = st.slider("Max Heart Rate", 60, 220, 168)
         with r3c3:
@@ -432,7 +504,7 @@ elif page == "🔬 Predict":
             oldpeak = st.slider("Oldpeak (ST Depression)", 0.0, 6.0, 1.0, 0.1)
         with r4c2:
             st_slope = st.selectbox("ST Slope", [0, 1, 2],
-                format_func=lambda x: ["Upsloping", "Flat", "Downsloping"][x])
+                format_func=lambda x: ["Upsloping","Flat","Downsloping"][x])
 
         predict_btn = st.button("🫀 Analyze Patient Risk")
 
@@ -443,10 +515,8 @@ elif page == "🔬 Predict":
             if not model_loaded:
                 st.error("Model not loaded. Please train the model first.")
             else:
-                # Preprocess
                 input_df = pd.DataFrame([{
-                    "age": age,
-                    "sex": sex,
+                    "age": age, "sex": sex,
                     "chest pain type": chest_pain,
                     "resting bp s": resting_bp,
                     "cholesterol": cholesterol,
@@ -458,14 +528,13 @@ elif page == "🔬 Predict":
                     "ST slope": st_slope
                 }])
 
-                input_df[["resting bp s", "cholesterol", "max heart rate", "age"]] = \
-                    std_scaler.transform(input_df[["resting bp s", "cholesterol",
-                                                   "max heart rate", "age"]])
+                input_df[["resting bp s","cholesterol","max heart rate","age"]] = \
+                    std_scaler.transform(input_df[["resting bp s","cholesterol","max heart rate","age"]])
                 input_df[["oldpeak"]] = mm_scaler.transform(input_df[["oldpeak"]])
 
-                pred  = model.predict(input_df)[0]
-                prob  = model.predict_proba(input_df)[0][1]
-                risk  = "High" if prob > 0.7 else "Medium" if prob > 0.4 else "Low"
+                pred   = model.predict(input_df)[0]
+                prob   = model.predict_proba(input_df)[0][1]
+                risk   = "High" if prob > 0.7 else "Medium" if prob > 0.4 else "Low"
                 rcolor = {"High": "#E63946", "Medium": "#D29922", "Low": "#3FB950"}[risk]
 
                 if pred == 1:
@@ -474,9 +543,7 @@ elif page == "🔬 Predict":
                         <div style='font-size:2.5rem'>⚠️</div>
                         <p class='result-title' style='color:#E63946'>Heart Disease<br>Detected</p>
                         <p class='result-confidence'>Confidence: {prob:.1%}</p>
-                        <p style='color:{rcolor}; font-weight:600; margin-top:0.5rem'>
-                            {risk} Risk
-                        </p>
+                        <p style='color:{rcolor}; font-weight:600; margin-top:0.5rem'>{risk} Risk</p>
                     </div>""", unsafe_allow_html=True)
                 else:
                     st.markdown(f"""
@@ -484,17 +551,14 @@ elif page == "🔬 Predict":
                         <div style='font-size:2.5rem'>✅</div>
                         <p class='result-title' style='color:#3FB950'>No Heart Disease<br>Detected</p>
                         <p class='result-confidence'>Confidence: {1-prob:.1%}</p>
-                        <p style='color:{rcolor}; font-weight:600; margin-top:0.5rem'>
-                            {risk} Risk
-                        </p>
+                        <p style='color:{rcolor}; font-weight:600; margin-top:0.5rem'>{risk} Risk</p>
                     </div>""", unsafe_allow_html=True)
 
-                st.markdown("<br>", unsafe_allow_html=True)
                 st.markdown(f"""
+                <br>
                 <div style='background:#161B22; border:1px solid #30363D; border-radius:8px; padding:1rem;'>
-                    <p style='font-family: Space Mono, monospace; font-size:0.7rem; color:#8B949E; margin:0 0 0.5rem 0;'>
-                        PREDICTION DETAILS
-                    </p>
+                    <p style='font-family:Space Mono,monospace; font-size:0.7rem;
+                              color:#8B949E; margin:0 0 0.5rem 0;'>PREDICTION DETAILS</p>
                     <div style='font-size:0.82rem; line-height:1.8'>
                         <div>Prediction: <b style='color:#58A6FF'>{pred}</b></div>
                         <div>Probability: <b style='color:#58A6FF'>{prob:.4f}</b></div>
@@ -525,7 +589,6 @@ elif page == "📊 Drift Detection":
 
     with col1:
         st.markdown("<p class='section-header'>Run Drift Detection</p>", unsafe_allow_html=True)
-
         st.markdown("""
         <div style='background:#161B22; border:1px solid #30363D; border-radius:8px;
                     padding:1.2rem; margin-bottom:1rem; font-size:0.85rem; line-height:1.7;'>
@@ -545,10 +608,7 @@ elif page == "📊 Drift Detection":
                         capture_output=True, text=True, timeout=60
                     )
                     output = result.stdout + result.stderr
-
-                    st.markdown(f"""
-                    <div class='log-box'>{output}</div>
-                    """, unsafe_allow_html=True)
+                    st.markdown(f"<div class='log-box'>{output}</div>", unsafe_allow_html=True)
 
                     if "DRIFT DETECTED" in output:
                         st.markdown("""
@@ -562,13 +622,11 @@ elif page == "📊 Drift Detection":
                                     border-radius:8px; padding:1rem; margin-top:1rem; text-align:center;'>
                             <b style='color:#3FB950'>✅ No Drift — Model is Stable</b>
                         </div>""", unsafe_allow_html=True)
-
                 except Exception as e:
                     st.error(f"Error: {e}")
 
     with col2:
         st.markdown("<p class='section-header'>Drift Report</p>", unsafe_allow_html=True)
-
         if os.path.exists("reports/drift_report.html"):
             with open("reports/drift_report.html", "r") as f:
                 html_content = f.read()
@@ -597,7 +655,6 @@ elif page == "🔁 Retrain Pipeline":
 
     with col1:
         st.markdown("<p class='section-header'>Pipeline Steps</p>", unsafe_allow_html=True)
-
         steps = [
             ("01", "Check data drift with Evidently AI"),
             ("02", "If drift > 20% → trigger retraining"),
@@ -632,9 +689,7 @@ elif page == "🔁 Retrain Pipeline":
 
         if "pipeline_output" in st.session_state:
             output = st.session_state["pipeline_output"]
-            st.markdown(f"""
-            <div class='log-box'>{output}</div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"<div class='log-box'>{output}</div>", unsafe_allow_html=True)
 
             if "PIPELINE COMPLETE" in output:
                 st.markdown("""
@@ -659,10 +714,10 @@ elif page == "🔁 Retrain Pipeline":
                 <div style='font-size:0.85rem'>Click the button to run<br>the full pipeline</div>
             </div>""", unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("""
+        <br>
         <div style='background:#161B22; border:1px solid #30363D; border-radius:8px; padding:1rem;'>
-            <p style='font-family: Space Mono, monospace; font-size:0.7rem; 
+            <p style='font-family:Space Mono,monospace; font-size:0.7rem;
                       color:#8B949E; margin:0 0 0.5rem 0;'>AUTO-TRIGGER CONDITIONS</p>
             <div style='font-size:0.82rem; line-height:1.8; color:#E6EDF3;'>
                 <div>📅 Every Monday at midnight (cron)</div>
