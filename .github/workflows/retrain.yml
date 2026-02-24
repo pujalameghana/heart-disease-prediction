@@ -2,13 +2,16 @@ name: Automated Retraining Pipeline
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
   schedule:
     - cron: "0 0 * * 1"
 
 jobs:
   retrain:
     runs-on: ubuntu-latest
+    env:
+      MLFLOW_TRACKING_URI: sqlite:///mlflow.db
 
     steps:
       - name: Checkout code
@@ -20,16 +23,10 @@ jobs:
           python-version: "3.10"
 
       - name: Install dependencies
-        run: |
-          pip install mlflow fastapi uvicorn pydantic evidently==0.4.30 scikit-learn pandas numpy xgboost
-
-      - name: Set MLflow tracking URI
-        run: echo "MLFLOW_TRACKING_URI=sqlite:///mlflow.db" >> $GITHUB_ENV
+        run: pip install mlflow fastapi uvicorn pydantic evidently==0.4.30 scikit-learn pandas numpy xgboost
 
       - name: Run drift detection
         run: python src/drift_detector.py
 
-     - name: Run retraining pipeline
+      - name: Run retraining pipeline
         run: python src/retrain_pipeline.py
-        env:
-          MLFLOW_TRACKING_URI: sqlite:///./mlflow.db
