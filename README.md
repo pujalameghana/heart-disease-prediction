@@ -1,107 +1,189 @@
-# Heart Disease Prediction Project
+# ModelOps Framework for Heart Disease Prediction with Automated Retraining
 
-## Overview
-This project aims to predict heart disease using various machine learning models. The dataset includes features such as `age`, `chest pain type`, `cholesterol`, `oldpeak`, `ST slope`, `sex_1`, and `exercise angina_1`. The goal is to achieve high F1-score while minimizing False Negatives (FN), as missing a heart disease diagnosis can be critical in the healthcare domain.
+## Project Overview
+A complete ModelOps framework built on top of a heart disease prediction ML model. 
+The system automatically detects data drift, triggers retraining, evaluates the new 
+model, and promotes it to production — all without human intervention.
+
+---
+
+## Architecture
+```
+Raw Data → Preprocessing → Model Training → MLflow Tracking
+                                                    ↓
+                                          Model Registry
+                                          (Staging → Production)
+                                                    ↓
+                                          FastAPI REST Endpoint
+                                                    ↓
+                                          Evidently Monitoring
+                                                    ↓
+                                    [Drift Detected?] → Auto Retrain ↑
+```
+
+---
+
+## Tech Stack
+
+| Component | Tool |
+|---|---|
+| ML Model | Random Forest (scikit-learn) |
+| Experiment Tracking | MLflow |
+| Drift Detection | Evidently AI |
+| API Serving | FastAPI |
+| CI/CD | GitHub Actions |
+| Language | Python 3.10 |
+
+---
 
 ## Project Structure
-- **data/**: Contains the training and test datasets (`X_train_data.csv`, `y_train_data.csv`, `X_test_data.csv`, `y_test_data.csv`).
-- **models/**: Trained models are saved here (e.g., `knn_model.pkl`, `random_forest_model.pkl`).
-- **results/**: Best hyperparameters and visualizations are saved here (e.g., `best_params_knn.json`, `random_forest_tree.png`).
-- **scripts/**: Training scripts for each model (e.g., `train_knn.py`, `train_random_forest.py`).
-- **feature_engineering.ipynb**: Data preprocessing and feature scaling (already applied to the dataset).
-- **evaluate_models.py**: Script to evaluate model performance and generate confusion matrices.
+```
+heart-disease-prediction/
+├── data/
+│   ├── heart.csv              # Reference training data
+│   └── current_data.csv       # Incoming production data
+├── src/
+│   ├── train.py               # MLflow-tracked training script
+│   ├── drift_detector.py      # Evidently drift detection
+│   └── retrain_pipeline.py    # Automated retraining loop
+├── models/
+│   ├── standard_scaler.pkl    # Saved StandardScaler
+│   └── minmax_scaler.pkl      # Saved MinMaxScaler
+├── reports/
+│   └── drift_report.html      # Evidently drift report
+├── notebooks/
+│   ├── exploratory_data_analysis.ipynb
+│   └── feature_engineering.ipynb
+├── .github/
+│   └── workflows/
+│       └── retrain.yml        # GitHub Actions CI/CD
+├── app.py                     # FastAPI serving endpoint
+└── requirements.txt
+```
 
-## Installation
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd heart-disease-prediction
-   ```
-2. Create a virtual environment (optional but recommended):
-    ```bash
-     python -m venv venv
-     source venv/bin/activate  # On Windows: venv\Scripts\activate
-    ```
-3. Install the required dependencies:
-    ```bash
-     pip install -r requirements.txt
-    ```
-## Usage
-1. Prepare the Data:
-Ensure the dataset files (`X_train_data.csv`, `y_train_data.csv`, `X_test_data.csv`, `y_test_data.csv`) are in the `data/` directory.
-The dataset is already preprocessed and scaled (via `feature_engineering.ipynb`).
+---
 
-2. Train a Model:
-Run the training script for the desired model. For example, to train the KNN model:
-    ```bash
-     python scripts/train_knn.py
-    ```
-    This will perform Grid Search, save the best model to `models/knn_model.pkl`, and save the best hyperparameters to `results/best_params_knn.json`.
+## Dataset
 
-3. Evaluate Models:
-Run the evaluation script to compare model performance:
-    ```bash
-       python evaluate_models.py
-    ```
+- **Source:** Heart Disease Cleveland UCI Dataset
+- **Size:** 1190 rows × 12 columns
+- **Target:** Binary classification (0 = No Heart Disease, 1 = Heart Disease)
+- **Features:** age, sex, chest pain type, resting bp, cholesterol, fasting blood sugar,
+  resting ecg, max heart rate, exercise angina, oldpeak, ST slope
 
-    This will output performance metrics (accuracy, precision, recall, F1-score) and confusion matrices for all trained models.
+---
 
 ## Model Performance
-The following table summarizes the performance of all trained models:
 
-| Model              | Train Accuracy | Test Accuracy | Train Precision | Test Precision | Train Recall | Test Recall | Train F1 Score | Test F1 Score |
-|--------------------|----------------|---------------|-----------------|----------------|--------------|-------------|----------------|---------------|
-| KNN                | 0.868383405    | 0.851428571   | 0.868531798     | 0.851583504    | 0.868383405  | 0.851428571 | 0.868105069    | 0.851055474   |
-| Naive Bayes        | 0.845493562    | 0.834285714   | 0.845689115     | 0.836190476    | 0.845493562  | 0.834285714 | 0.845563564    | 0.834557155   |
-| Logistic Regression| 0.859799714    | 0.822857143   | 0.862130498     | 0.822714021    | 0.859799714  | 0.822857143 | 0.858876052    | 0.822541453   |
-| Decision Tree      | 0.859799714    | 0.828571429   | 0.860311006     | 0.828405272    | 0.859799714  | 0.828571429 | 0.859340479    | 0.828379295   |
-| Random Forest      | 0.927038627    | 0.845714286   | 0.927569527     | 0.846095238    | 0.927038627  | 0.845714286 | 0.926870995    | 0.845203828   |
-| ANN                | 0.898426323    | 0.828571429   | 0.89838481      | 0.829931973    | 0.898426323  | 0.828571429 | 0.898359237    | 0.828818703   |
-| SVM                | 0.878397711    | 0.851428571   | 0.887336037     | 0.852226767    | 0.878397711  | 0.851428571 | 0.876705524    | 0.850808375   |
+| Metric | Score |
+|---|---|
+| Accuracy | 86.97% |
+| ROC-AUC | 94.50% |
+| F1 Score | 87.84% |
 
-### Key Insights:
-- **Best Model**: KNN and SVM achieved the highest test F1-score (0.851), followed by Random Forest (0.845).
-- **Healthcare Context**: In the healthcare domain, a test F1-score of 0.851 (approximately 15% error rate) is not sufficient, as False Negatives (FN) can be critical. A target F1-score of >0.95 and recall >0.95 is recommended.
-- **Feature Importance**: Across models, `ST slope`, `chest pain type`, and `oldpeak` were consistently the most important features for predicting heart disease. For example:
+---
 
-#### Random Forest Feature Importance
-| Feature            | Importance  |
-|--------------------|-------------|
-| ST slope          | 0.307832    |
-| chest pain type   | 0.148015    |
-| oldpeak           | 0.125594    |
+## How to Run
 
-#### Logistic Regression Coefficients
-| Feature            | Importance  |
-|--------------------|-------------|
-| ST slope          | 0.045109    |
-| chest pain type   | 0.031527    |
-| exercise angina_1 | 0.028410    |
+### 1. Clone the repo
+```bash
+git clone https://github.com/pujalameghana/heart-disease-prediction.git
+cd heart-disease-prediction
+```
 
-#### Naive Bayes Permutation Importance
-| Feature            | Importance  |
-|--------------------|-------------|
-| ST slope          | 0.045109    |
-| chest pain type   | 0.031527    |
-| exercise angina_1 | 0.028410    |
+### 2. Install dependencies
+```bash
+pip install -r requirements.txt
+```
 
-## Future Improvements
-- **More Data**: Collect more data to improve model generalization. The current dataset might be small, and healthcare problems often require thousands of samples for better performance.
-- **Advanced Models**: Try gradient boosting methods like XGBoost or LightGBM to achieve higher performance. Example for XGBoost:
+### 3. Train the model
+```bash
+python src/train.py
+```
 
-```python
-from xgboost import XGBClassifier
-    param_grid = {
-    'n_estimators': [100, 200],
-    'max_depth': [3, 5, 7],
-    'learning_rate': [0.01, 0.1],
-    'scale_pos_weight': [1, 2, 3]  # To reduce FN
+### 4. View MLflow UI
+```bash
+mlflow ui --port 5000
+# Open: http://localhost:5000
+```
+
+### 5. Start FastAPI server
+```bash
+uvicorn app:app --reload --port 8000
+# Open: http://localhost:8000/docs
+```
+
+### 6. Run drift detection
+```bash
+python src/drift_detector.py
+```
+
+### 7. Run full automated retraining pipeline
+```bash
+python src/retrain_pipeline.py
+```
+
+---
+
+## API Usage
+
+**Endpoint:** `POST /predict`
+
+**Request:**
+```json
+{
+  "age": 52,
+  "sex": 1,
+  "chest_pain_type": 0,
+  "resting_bp_s": 125,
+  "cholesterol": 212,
+  "fasting_blood_sugar": 0,
+  "resting_ecg": 1,
+  "max_heart_rate": 168,
+  "exercise_angina": 0,
+  "oldpeak": 1.0,
+  "st_slope": 2
 }
 ```
-- **Threshold Tuning**: Adjust the prediction threshold to further reduce False Negatives (FN). See the "Adjust Threshold" section in Usage.
-- **Feature Engineering**: Explore new features or interactions (e.g., age and cholesterol interaction) to capture more complex patterns.
-- **Domain Expertise**: Collaborate with a cardiologist to validate feature importance and determine acceptable error rates (e.g., FN < 5%).
-- **Additional Metrics**: Evaluate models using ROC-AUC and Precision-Recall AUC, which are more informative for imbalanced datasets in healthcare.
 
-## License
-This project is licensed under the MIT License - see the  file for details.
+**Response:**
+```json
+{
+  "prediction": 0,
+  "result": "No Heart Disease",
+  "confidence": 0.4004,
+  "risk_level": "Medium"
+}
+```
+
+---
+
+## Automated Retraining Pipeline
+
+The pipeline runs automatically:
+- **On every push** to master branch
+- **Every Monday midnight** via scheduled cron job
+
+### Pipeline Steps:
+1. Check data drift using Evidently AI
+2. If drift detected → trigger retraining
+3. Evaluate new model accuracy
+4. If accuracy > 85% → promote to Production
+5. If accuracy < 85% → keep existing model
+
+---
+
+## Key Features
+
+- **Experiment Tracking** — every training run logged with params and metrics
+- **Model Versioning** — multiple model versions managed in MLflow registry
+- **Drift Detection** — automatic detection when input data distribution shifts
+- **Automated Retraining** — no human intervention needed
+- **REST API** — real-time predictions via FastAPI
+- **CI/CD** — automated pipeline runs on every code push
+
+---
+
+## Author
+Pujala meghana  
+Major Project — ModelOps Framework for Heart Disease Prediction
