@@ -9,6 +9,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 import pickle
+import os
+mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"))
 
 # ── MLflow setup ──────────────────────────────────────────────
 mlflow.set_experiment("heart-disease-prediction")
