@@ -1,23 +1,24 @@
 # src/train.py
+# src/train.py
 import pandas as pd
 import numpy as np
+import os
+import pickle
 import mlflow
 import mlflow.sklearn
-import os
-
-# Fix MLflow path for GitHub Actions
-mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"))
-mlflow.set_experiment("heart-disease-prediction")
-
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
-import pickle
-import os
-mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"))
 
 # ── MLflow setup ──────────────────────────────────────────────
+_tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db")
+if not _tracking_uri.startswith("sqlite:///") and not _tracking_uri.startswith("http"):
+    _tracking_uri = "sqlite:///mlflow.db"
+mlflow.set_tracking_uri(_tracking_uri)
+mlflow.set_experiment("heart-disease-prediction")
+
+
 
 
 def preprocess(df):
