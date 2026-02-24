@@ -4,6 +4,11 @@ import numpy as np
 import mlflow
 import mlflow.sklearn
 import os
+
+# Fix MLflow path for GitHub Actions
+mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"))
+mlflow.set_experiment("heart-disease-prediction")
+
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder
@@ -13,7 +18,7 @@ import os
 mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"))
 
 # ── MLflow setup ──────────────────────────────────────────────
-mlflow.set_experiment("heart-disease-prediction")
+
 
 def preprocess(df):
     """Exact same preprocessing as feature_engineering notebook"""
