@@ -1,5 +1,18 @@
 {
-  "doctor": {"name": "Dr. Puja", "password": "doctor123"},
-  "admin": {"name": "Admin User", "password": "admin123"},
-  "panel": {"name": "Panel Member", "password": "panel123"}
+  "doctor": {
+    "name": "Dr. Puja",
+    "password": "doctor123"
+  },
+  "admin": {
+    "name": "Admin User",
+    "password": "admin123"
+  },
+  "panel": {
+    "name": "Panel Member",
+    "password": "panel123"
+  },
+  "ramya": {
+    "name": "Ramya Thopukonda",
+    "password": "@Ramya123"
+  }
 }
