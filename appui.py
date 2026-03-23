@@ -104,29 +104,15 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
 .block-container { padding: 1rem 2rem 2rem 2rem !important; }
 #MainMenu, footer, header { visibility: hidden; }
 section[data-testid="stSidebar"] { display: none !important; }
-
-.top-nav {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0.8rem 1.5rem; margin-bottom: 1.5rem;
-    background: rgba(128,128,128,0.05);
-    border: 1px solid rgba(128,128,128,0.15);
-    border-radius: 12px;
-}
-.nav-brand { font-family:'Space Mono',monospace; font-size:1rem; font-weight:700; color:#E63946; }
-.nav-links { display:flex; gap:0.5rem; }
-.nav-user { font-size:0.78rem; opacity:0.7; }
-
 .hero { border:1px solid rgba(128,128,128,0.2);border-radius:12px;padding:2rem 2.5rem;
         margin-bottom:2rem;background:linear-gradient(135deg,rgba(230,57,70,0.05) 0%,transparent 50%,rgba(88,166,255,0.05) 100%); }
 .hero-title { font-family:'Space Mono',monospace;font-size:1.6rem;font-weight:700;margin:0; }
 .hero-title span { color:#E63946; }
 .hero-sub { font-size:0.9rem;margin-top:0.4rem;opacity:0.7; }
-
 .metric-card { border:1px solid rgba(128,128,128,0.2);border-radius:10px;padding:1.2rem 1.5rem;
                text-align:center;background:rgba(128,128,128,0.05); }
 .metric-value { font-family:'Space Mono',monospace;font-size:2rem;font-weight:700;margin:0; }
 .metric-label { font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;margin-top:0.3rem;opacity:0.7; }
-
 .section-header { font-family:'Space Mono',monospace;font-size:0.8rem;text-transform:uppercase;
                   letter-spacing:2px;border-bottom:1px solid rgba(128,128,128,0.2);
                   padding-bottom:0.5rem;margin-bottom:1.2rem;opacity:0.7; }
@@ -139,6 +125,9 @@ section[data-testid="stSidebar"] { display: none !important; }
 .log-box { background:#010409;border:1px solid #30363D;border-radius:8px;padding:1rem;
            font-family:'Space Mono',monospace;font-size:0.75rem;color:#3FB950;
            max-height:300px;overflow-y:auto;white-space:pre-wrap; }
+.patient-info-box { border:1px solid rgba(88,166,255,0.3);border-radius:10px;
+                    padding:1rem 1.2rem;margin-bottom:1.2rem;
+                    background:rgba(88,166,255,0.05); }
 .stButton > button {
     background: rgba(128,128,128,0.08) !important;
     color: inherit !important;
@@ -157,20 +146,6 @@ section[data-testid="stSidebar"] { display: none !important; }
     background: rgba(230,57,70,0.15) !important;
     border-color: #E63946 !important;
     color: #E63946 !important;
-}
-/* Active page button */
-.stButton > button[kind="primary"] {
-    background: #E63946 !important;
-    color: white !important;
-    border-color: #E63946 !important;
-}
-/* Login/action buttons specifically */
-div[data-testid="column"] .stButton > button#signin_btn,
-div[data-testid="column"] .stButton > button#signup_btn,
-div[data-testid="column"] .stButton > button#logout_btn {
-    background: #E63946 !important;
-    color: white !important;
-    border: none !important;
 }
 div[data-testid="stTabs"] button { font-family:'Space Mono',monospace !important; font-size:0.8rem !important; }
 </style>
@@ -207,9 +182,8 @@ name = st.session_state.get("name", "")
 if "page" not in st.session_state:
     st.session_state["page"] = "🏠 Dashboard"
 
-pages = ["🏠 Dashboard", "🔬 Predict", "📊 Drift Detection", "🔁 Retrain Pipeline"]
+pages = ["🏠 Dashboard", "🔬 Predict", "📊 Drift Detection", "🔁 Retrain Pipeline", "📋 History"]
 
-# CSS to highlight active nav button
 active_page = st.session_state["page"]
 active_css = ""
 for i, p in enumerate(pages):
@@ -222,11 +196,11 @@ for i, p in enumerate(pages):
         }}"""
 st.markdown(f"<style>{active_css}</style>", unsafe_allow_html=True)
 
-col_brand, c1, c2, c3, c4, col_user = st.columns([1.2, 1, 1, 1, 1, 1.5])
+col_brand, c1, c2, c3, c4, c5, col_user = st.columns([1.2, 1, 1, 1, 1, 1, 1.5])
 with col_brand:
     st.markdown("<div style='font-family:Space Mono,monospace;font-size:0.95rem;font-weight:700;color:#E63946;padding-top:0.55rem;'>🫀 MODELOPS</div>", unsafe_allow_html=True)
 
-nav_cols = [c1, c2, c3, c4]
+nav_cols = [c1, c2, c3, c4, c5]
 for i, p in enumerate(pages):
     with nav_cols[i]:
         if st.button(p, key=f"nav_{i}"):
@@ -272,17 +246,35 @@ if page == "🏠 Dashboard":
             st.markdown(f"<div class='pipeline-step'><span class='step-number'>{num}</span><span style='font-size:1rem'>{icon}</span><div><div style='font-weight:600;font-size:0.9rem'>{title}</div><div style='font-size:0.78rem;opacity:0.7'>{desc}</div></div></div>", unsafe_allow_html=True)
     with col2:
         st.markdown("<p class='section-header'>Tech Stack</p>", unsafe_allow_html=True)
-        for icon,name_,role in [("🤖","Random Forest","ML Model"),("📊","MLflow","Experiment Tracking"),("🔍","Evidently AI","Drift Detection"),("⚡","FastAPI","Model Serving"),("🔄","GitHub Actions","CI/CD Pipeline"),("🎯","Streamlit","Dashboard UI")]:
+        for icon,name_,role in [
+            ("🤖","Random Forest","ML Model"),
+            ("📊","MLflow","Experiment Tracking"),
+            ("🔍","Evidently AI","Drift Detection"),
+            ("⚡","FastAPI","Model Serving"),
+            ("🔄","GitHub Actions","CI/CD Pipeline"),
+            ("🎯","Streamlit","Dashboard UI")
+        ]:
             st.markdown(f"<div style='border:1px solid rgba(128,128,128,0.2);border-radius:8px;padding:0.7rem 1rem;margin-bottom:0.4rem;display:flex;align-items:center;gap:0.8rem;background:rgba(128,128,128,0.03);'><span style='font-size:1.2rem'>{icon}</span><div><div style='font-weight:600;font-size:0.85rem'>{name_}</div><div style='font-size:0.75rem;opacity:0.7'>{role}</div></div></div>", unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════
 # PAGE 2: PREDICT
 # ══════════════════════════════════════════════════════════════
 elif page == "🔬 Predict":
-    st.markdown("<div class='hero'><p class='hero-title'>Patient <span>Risk</span> Assessment</p><p class='hero-sub'>Enter patient vitals to get an instant heart disease prediction</p></div>", unsafe_allow_html=True)
+    st.markdown("<div class='hero'><p class='hero-title'>Patient <span>Risk</span> Assessment</p><p class='hero-sub'>Enter patient details and vitals to get an instant heart disease prediction</p></div>", unsafe_allow_html=True)
     col1, col2 = st.columns([2,1])
     with col1:
-        st.markdown("<p class='section-header'>Patient Information</p>", unsafe_allow_html=True)
+        # ── Patient Identity ──────────────────────────────
+        st.markdown("<p class='section-header'>Patient Identity</p>", unsafe_allow_html=True)
+        st.markdown("<div class='patient-info-box'>", unsafe_allow_html=True)
+        pid_col1, pid_col2 = st.columns(2)
+        with pid_col1:
+            patient_name = st.text_input("👤 Patient Name", placeholder="e.g. Ramya Thopukonda", key="patient_name")
+        with pid_col2:
+            patient_id = st.text_input("🪪 Patient ID", placeholder="e.g. PT001", key="patient_id")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # ── Clinical Vitals ───────────────────────────────
+        st.markdown("<p class='section-header'>Clinical Vitals</p>", unsafe_allow_html=True)
         r1c1,r1c2,r1c3 = st.columns(3)
         with r1c1: age = st.slider("Age",20,90,52)
         with r1c2: sex = st.selectbox("Sex",[0,1],format_func=lambda x:"Female" if x==0 else "Male")
@@ -299,25 +291,89 @@ elif page == "🔬 Predict":
         with r4c1: oldpeak = st.slider("Oldpeak",0.0,6.0,1.0,0.1)
         with r4c2: st_slope = st.selectbox("ST Slope",[0,1,2],format_func=lambda x:["Upsloping","Flat","Downsloping"][x])
         predict_btn = st.button("🫀 Analyze Patient Risk")
+
     with col2:
         st.markdown("<p class='section-header'>Result</p>", unsafe_allow_html=True)
         if predict_btn:
             if not model_loaded:
                 st.error("Model not loaded.")
             else:
-                input_df = pd.DataFrame([{"age":age,"sex":sex,"chest pain type":chest_pain,"resting bp s":resting_bp,"cholesterol":cholesterol,"fasting blood sugar":fasting_bs,"resting ecg":resting_ecg,"max heart rate":max_hr,"exercise angina":exercise_angina,"oldpeak":oldpeak,"ST slope":st_slope}])
-                input_df[["resting bp s","cholesterol","max heart rate","age"]] = std_scaler.transform(input_df[["resting bp s","cholesterol","max heart rate","age"]])
+                # Show patient identity in result
+                p_name = patient_name.strip() if patient_name.strip() else "Unknown"
+                p_id   = patient_id.strip()   if patient_id.strip()   else "Not Provided"
+                st.markdown(f"""
+                <div style='border:1px solid rgba(88,166,255,0.3);border-radius:8px;
+                            padding:0.8rem 1rem;margin-bottom:1rem;
+                            background:rgba(88,166,255,0.05);font-size:0.82rem;'>
+                    <div>👤 <b>{p_name}</b></div>
+                    <div style='opacity:0.7;margin-top:0.2rem;'>🪪 ID: {p_id}</div>
+                </div>""", unsafe_allow_html=True)
+
+                input_df = pd.DataFrame([{
+                    "age":age,"sex":sex,"chest pain type":chest_pain,
+                    "resting bp s":resting_bp,"cholesterol":cholesterol,
+                    "fasting blood sugar":fasting_bs,"resting ecg":resting_ecg,
+                    "max heart rate":max_hr,"exercise angina":exercise_angina,
+                    "oldpeak":oldpeak,"ST slope":st_slope
+                }])
+                input_df[["resting bp s","cholesterol","max heart rate","age"]] = \
+                    std_scaler.transform(input_df[["resting bp s","cholesterol","max heart rate","age"]])
                 input_df[["oldpeak"]] = mm_scaler.transform(input_df[["oldpeak"]])
-                pred = model.predict(input_df)[0]
-                prob = model.predict_proba(input_df)[0][1]
-                risk = "High" if prob>0.7 else "Medium" if prob>0.4 else "Low"
+
+                pred  = model.predict(input_df)[0]
+                prob  = model.predict_proba(input_df)[0][1]
+                risk  = "High" if prob>0.7 else "Medium" if prob>0.4 else "Low"
                 rcolor = {"High":"#E63946","Medium":"#D29922","Low":"#3FB950"}[risk]
+
                 if pred==1:
                     st.markdown(f"<div class='result-positive'><div style='font-size:2.5rem'>⚠️</div><p class='result-title' style='color:#E63946'>Heart Disease<br>Detected</p><p style='opacity:0.7'>Confidence: {prob:.1%}</p><p style='color:{rcolor};font-weight:600'>{risk} Risk</p></div>", unsafe_allow_html=True)
                 else:
                     st.markdown(f"<div class='result-negative'><div style='font-size:2.5rem'>✅</div><p class='result-title' style='color:#3FB950'>No Heart Disease<br>Detected</p><p style='opacity:0.7'>Confidence: {1-prob:.1%}</p><p style='color:{rcolor};font-weight:600'>{risk} Risk</p></div>", unsafe_allow_html=True)
+
+                st.markdown(f"""<br>
+                <div style='border:1px solid rgba(128,128,128,0.2);border-radius:8px;
+                            padding:1rem;background:rgba(128,128,128,0.03);'>
+                    <p style='font-family:Space Mono,monospace;font-size:0.7rem;
+                              opacity:0.6;margin:0 0 0.5rem 0;'>PREDICTION DETAILS</p>
+                    <div style='font-size:0.82rem;line-height:1.8'>
+                        <div>Prediction: <b style='color:#58A6FF'>{pred}</b></div>
+                        <div>Probability: <b style='color:#58A6FF'>{prob:.4f}</b></div>
+                        <div>Risk Level: <b style='color:{rcolor}'>{risk}</b></div>
+                        <div>Doctor: <b style='color:#58A6FF'>{st.session_state.get("username","")}</b></div>
+                    </div>
+                </div>""", unsafe_allow_html=True)
+
+                # ── Save to history ──────────────────────
+                history_file = "prediction_history.csv"
+                new_record = pd.DataFrame([{
+                    "Date":         datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "Patient Name": p_name,
+                    "Patient ID":   p_id,
+                    "Doctor":       st.session_state.get("username","unknown"),
+                    "Age":          age,
+                    "Sex":          "Male" if sex==1 else "Female",
+                    "Cholesterol":  cholesterol,
+                    "BP":           resting_bp,
+                    "Max HR":       max_hr,
+                    "Chest Pain":   ["Typical","Atypical","Non-Anginal","Asymptomatic"][chest_pain],
+                    "Result":       "Heart Disease" if pred==1 else "No Disease",
+                    "Probability":  f"{prob:.1%}",
+                    "Risk":         risk
+                }])
+                if os.path.exists(history_file):
+                    new_record.to_csv(history_file, mode='a', header=False, index=False)
+                else:
+                    new_record.to_csv(history_file, mode='w', header=True, index=False)
+
+                st.success("✅ Prediction saved to history!")
         else:
-            st.markdown("<div style='border:1px dashed rgba(128,128,128,0.3);border-radius:10px;padding:3rem 1rem;text-align:center;opacity:0.6;'><div style='font-size:2rem;margin-bottom:1rem'>🫀</div><div style='font-size:0.85rem'>Fill in patient details<br>and click Analyze</div></div>", unsafe_allow_html=True)
+            st.markdown("""
+            <div style='border:1px dashed rgba(128,128,128,0.3);border-radius:10px;
+                        padding:3rem 1rem;text-align:center;opacity:0.6;'>
+                <div style='font-size:2rem;margin-bottom:1rem'>🫀</div>
+                <div style='font-size:0.85rem'>Enter patient name, ID<br>
+                and clinical vitals,<br>then click Analyze</div>
+            </div>""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════
 # PAGE 3: DRIFT DETECTION
@@ -356,7 +412,14 @@ elif page == "🔁 Retrain Pipeline":
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("<p class='section-header'>Pipeline Steps</p>", unsafe_allow_html=True)
-        for num,desc in [("01","Check data drift with Evidently AI"),("02","If drift > 20% → trigger retraining"),("03","Train new Random Forest model"),("04","Log run to MLflow experiment tracker"),("05","Compare accuracy against 85% threshold"),("06","Promote to Production if threshold met")]:
+        for num,desc in [
+            ("01","Check data drift with Evidently AI"),
+            ("02","If drift > 20% → trigger retraining"),
+            ("03","Train new Random Forest model"),
+            ("04","Log run to MLflow experiment tracker"),
+            ("05","Compare accuracy against 85% threshold"),
+            ("06","Promote to Production if threshold met")
+        ]:
             st.markdown(f"<div class='pipeline-step'><span class='step-number'>{num}</span><span style='font-size:0.85rem'>{desc}</span></div>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("🚀 Run Full Retraining Pipeline"):
@@ -378,3 +441,63 @@ elif page == "🔁 Retrain Pipeline":
         else:
             st.markdown("<div style='border:1px dashed rgba(128,128,128,0.3);border-radius:10px;padding:3rem 1rem;text-align:center;opacity:0.6;'><div style='font-size:2rem;margin-bottom:1rem'>🔁</div><div style='font-size:0.85rem'>Click the button to run<br>the full pipeline</div></div>", unsafe_allow_html=True)
         st.markdown("<br><div style='border:1px solid rgba(128,128,128,0.2);border-radius:8px;padding:1rem;background:rgba(128,128,128,0.03);'><p style='font-family:Space Mono,monospace;font-size:0.7rem;opacity:0.6;margin:0 0 0.5rem 0;'>AUTO-TRIGGER CONDITIONS</p><div style='font-size:0.82rem;line-height:1.8;'><div>📅 Every Monday at midnight (cron)</div><div>🔀 Every push to master branch</div><div>📊 When drift exceeds 20% threshold</div></div></div>", unsafe_allow_html=True)
+
+# ══════════════════════════════════════════════════════════════
+# PAGE 5: PREDICTION HISTORY
+# ══════════════════════════════════════════════════════════════
+elif page == "📋 History":
+    st.markdown("<div class='hero'><p class='hero-title'>Prediction <span>History</span></p><p class='hero-sub'>Complete audit trail of all heart disease predictions made by doctors</p></div>", unsafe_allow_html=True)
+
+    history_file = "prediction_history.csv"
+
+    if os.path.exists(history_file):
+        df_history = pd.read_csv(history_file)
+
+        total      = len(df_history)
+        disease    = len(df_history[df_history["Result"] == "Heart Disease"])
+        no_disease = len(df_history[df_history["Result"] == "No Disease"])
+        high_risk  = len(df_history[df_history["Risk"]   == "High"])
+
+        c1,c2,c3,c4 = st.columns(4)
+        with c1: st.markdown(f"<div class='metric-card'><p class='metric-value' style='color:#58A6FF'>{total}</p><p class='metric-label'>Total Predictions</p></div>", unsafe_allow_html=True)
+        with c2: st.markdown(f"<div class='metric-card'><p class='metric-value' style='color:#E63946'>{disease}</p><p class='metric-label'>Disease Detected</p></div>", unsafe_allow_html=True)
+        with c3: st.markdown(f"<div class='metric-card'><p class='metric-value' style='color:#3FB950'>{no_disease}</p><p class='metric-label'>No Disease</p></div>", unsafe_allow_html=True)
+        with c4: st.markdown(f"<div class='metric-card'><p class='metric-value' style='color:#D29922'>{high_risk}</p><p class='metric-label'>High Risk Cases</p></div>", unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # ── Filter by doctor ──────────────────────────────
+        col_filter, col_clear = st.columns([3,1])
+        with col_filter:
+            doctors = ["All Doctors"] + list(df_history["Doctor"].unique())
+            selected_doctor = st.selectbox("Filter by Doctor", doctors, key="filter_doctor")
+        with col_clear:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🔄 Refresh"):
+                st.rerun()
+
+        if selected_doctor != "All Doctors":
+            df_display = df_history[df_history["Doctor"] == selected_doctor]
+        else:
+            df_display = df_history
+
+        st.markdown("<p class='section-header'>All Predictions</p>", unsafe_allow_html=True)
+        st.dataframe(df_display, use_container_width=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        csv = df_history.to_csv(index=False)
+        st.download_button(
+            label="⬇️ Download Full History as CSV",
+            data=csv,
+            file_name=f"prediction_history_{datetime.now().strftime('%Y%m%d')}.csv",
+            mime="text/csv"
+        )
+    else:
+        st.markdown("""
+        <div style='border:1px dashed rgba(128,128,128,0.3);border-radius:10px;
+                    padding:4rem 1rem;text-align:center;opacity:0.6;'>
+            <div style='font-size:2.5rem;margin-bottom:1rem'>📋</div>
+            <div style='font-size:0.9rem;font-weight:600;margin-bottom:0.5rem'>No Predictions Yet</div>
+            <div style='font-size:0.82rem;'>Go to 🔬 Predict page, enter patient name,<br>
+            ID and vitals, then click Analyze.</div>
+        </div>""", unsafe_allow_html=True)

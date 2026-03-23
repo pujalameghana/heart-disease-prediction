@@ -18,9 +18,6 @@ if not _tracking_uri.startswith("sqlite:///") and not _tracking_uri.startswith("
 mlflow.set_tracking_uri(_tracking_uri)
 mlflow.set_experiment("heart-disease-prediction")
 
-
-
-
 def preprocess(df):
     """Exact same preprocessing as feature_engineering notebook"""
     df = df.copy()
