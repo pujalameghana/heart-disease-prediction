@@ -1,2 +1,2 @@
 Date,Patient Name,Patient ID,Doctor,Age,Sex,Cholesterol,BP,Max HR,Chest Pain,Result,Probability,Risk
-2026-03-23 00:44,meghana,PT001,ramya,52,Female,422,125,214,Typical,No Disease,37.0%,Low
+2026-03-23 01:02,meghana,PT001,ramya,52,Female,212,125,168,Typical,No Disease,24.2%,Low

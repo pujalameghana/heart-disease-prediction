@@ -9,6 +9,7 @@ import sys
 import subprocess
 import json
 from datetime import datetime
+import plotly.graph_objects as go
 
 USERS_FILE = "users.json"
 
@@ -126,27 +127,17 @@ section[data-testid="stSidebar"] { display: none !important; }
            font-family:'Space Mono',monospace;font-size:0.75rem;color:#3FB950;
            max-height:300px;overflow-y:auto;white-space:pre-wrap; }
 .patient-info-box { border:1px solid rgba(88,166,255,0.3);border-radius:10px;
-                    padding:1rem 1.2rem;margin-bottom:1.2rem;
-                    background:rgba(88,166,255,0.05); }
+                    padding:1rem 1.2rem;margin-bottom:1.2rem;background:rgba(88,166,255,0.05); }
 .stButton > button {
-    background: rgba(128,128,128,0.08) !important;
-    color: inherit !important;
-    border: 1px solid rgba(128,128,128,0.2) !important;
-    border-radius: 8px !important;
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 0.85rem !important;
-    font-weight: 500 !important;
-    padding: 0.45rem 0.5rem !important;
-    width: 100% !important;
-    height: 2.6rem !important;
-    white-space: nowrap !important;
-    transition: all 0.15s !important;
+    background: rgba(128,128,128,0.08) !important; color: inherit !important;
+    border: 1px solid rgba(128,128,128,0.2) !important; border-radius: 8px !important;
+    font-family: 'DM Sans', sans-serif !important; font-size: 0.85rem !important;
+    font-weight: 500 !important; padding: 0.45rem 0.5rem !important;
+    width: 100% !important; height: 2.6rem !important;
+    white-space: nowrap !important; transition: all 0.15s !important;
 }
-.stButton > button:hover {
-    background: rgba(230,57,70,0.15) !important;
-    border-color: #E63946 !important;
-    color: #E63946 !important;
-}
+.stButton > button:hover { background: rgba(230,57,70,0.15) !important;
+    border-color: #E63946 !important; color: #E63946 !important; }
 div[data-testid="stTabs"] button { font-family:'Space Mono',monospace !important; font-size:0.8rem !important; }
 </style>
 """, unsafe_allow_html=True)
@@ -190,9 +181,7 @@ for i, p in enumerate(pages):
     if p == active_page:
         active_css += f"""
         div[data-testid="column"]:nth-child({i+2}) .stButton > button {{
-            background: #E63946 !important;
-            color: white !important;
-            border-color: #E63946 !important;
+            background: #E63946 !important; color: white !important; border-color: #E63946 !important;
         }}"""
 st.markdown(f"<style>{active_css}</style>", unsafe_allow_html=True)
 
@@ -218,7 +207,6 @@ with col_user:
         st.rerun()
 
 st.markdown("<hr style='border:none;border-top:1px solid rgba(128,128,128,0.15);margin:0 0 1.5rem 0;'>", unsafe_allow_html=True)
-
 page = st.session_state.get("page", "🏠 Dashboard")
 
 # ══════════════════════════════════════════════════════════════
@@ -231,6 +219,26 @@ if page == "🏠 Dashboard":
     with c2: st.markdown("<div class='metric-card'><p class='metric-value' style='color:#3FB950'>94.50%</p><p class='metric-label'>ROC-AUC</p></div>", unsafe_allow_html=True)
     with c3: st.markdown("<div class='metric-card'><p class='metric-value' style='color:#D29922'>87.84%</p><p class='metric-label'>F1 Score</p></div>", unsafe_allow_html=True)
     with c4: st.markdown("<div class='metric-card'><p class='metric-value' style='color:#E63946'>1190</p><p class='metric-label'>Training Samples</p></div>", unsafe_allow_html=True)
+
+    # ── Model Performance Chart ───────────────────────────
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<p class='section-header'>Model Performance Overview</p>", unsafe_allow_html=True)
+    fig_perf = go.Figure(go.Bar(
+        x=['Accuracy', 'ROC-AUC', 'F1 Score'],
+        y=[86.97, 94.50, 87.84],
+        marker_color=['#58A6FF', '#3FB950', '#D29922'],
+        text=['86.97%', '94.50%', '87.84%'],
+        textposition='outside',
+        width=0.4
+    ))
+    fig_perf.update_layout(
+        yaxis=dict(range=[0, 105], title='Score (%)', gridcolor='rgba(128,128,128,0.1)'),
+        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+        font_color='white', height=280, margin=dict(t=20,b=20,l=20,r=20),
+        showlegend=False
+    )
+    st.plotly_chart(fig_perf, use_container_width=True)
+
     st.markdown("<br>", unsafe_allow_html=True)
     col1, col2 = st.columns([3,2])
     with col1:
@@ -247,12 +255,9 @@ if page == "🏠 Dashboard":
     with col2:
         st.markdown("<p class='section-header'>Tech Stack</p>", unsafe_allow_html=True)
         for icon,name_,role in [
-            ("🤖","Random Forest","ML Model"),
-            ("📊","MLflow","Experiment Tracking"),
-            ("🔍","Evidently AI","Drift Detection"),
-            ("⚡","FastAPI","Model Serving"),
-            ("🔄","GitHub Actions","CI/CD Pipeline"),
-            ("🎯","Streamlit","Dashboard UI")
+            ("🤖","Random Forest","ML Model"),("📊","MLflow","Experiment Tracking"),
+            ("🔍","Evidently AI","Drift Detection"),("⚡","FastAPI","Model Serving"),
+            ("🔄","GitHub Actions","CI/CD Pipeline"),("🎯","Streamlit","Dashboard UI")
         ]:
             st.markdown(f"<div style='border:1px solid rgba(128,128,128,0.2);border-radius:8px;padding:0.7rem 1rem;margin-bottom:0.4rem;display:flex;align-items:center;gap:0.8rem;background:rgba(128,128,128,0.03);'><span style='font-size:1.2rem'>{icon}</span><div><div style='font-weight:600;font-size:0.85rem'>{name_}</div><div style='font-size:0.75rem;opacity:0.7'>{role}</div></div></div>", unsafe_allow_html=True)
 
@@ -263,17 +268,13 @@ elif page == "🔬 Predict":
     st.markdown("<div class='hero'><p class='hero-title'>Patient <span>Risk</span> Assessment</p><p class='hero-sub'>Enter patient details and vitals to get an instant heart disease prediction</p></div>", unsafe_allow_html=True)
     col1, col2 = st.columns([2,1])
     with col1:
-        # ── Patient Identity ──────────────────────────────
         st.markdown("<p class='section-header'>Patient Identity</p>", unsafe_allow_html=True)
-        st.markdown("<div class='patient-info-box'>", unsafe_allow_html=True)
         pid_col1, pid_col2 = st.columns(2)
         with pid_col1:
             patient_name = st.text_input("👤 Patient Name", placeholder="e.g. Ramya Thopukonda", key="patient_name")
         with pid_col2:
             patient_id = st.text_input("🪪 Patient ID", placeholder="e.g. PT001", key="patient_id")
-        st.markdown("</div>", unsafe_allow_html=True)
 
-        # ── Clinical Vitals ───────────────────────────────
         st.markdown("<p class='section-header'>Clinical Vitals</p>", unsafe_allow_html=True)
         r1c1,r1c2,r1c3 = st.columns(3)
         with r1c1: age = st.slider("Age",20,90,52)
@@ -298,13 +299,12 @@ elif page == "🔬 Predict":
             if not model_loaded:
                 st.error("Model not loaded.")
             else:
-                # Show patient identity in result
                 p_name = patient_name.strip() if patient_name.strip() else "Unknown"
                 p_id   = patient_id.strip()   if patient_id.strip()   else "Not Provided"
+
                 st.markdown(f"""
                 <div style='border:1px solid rgba(88,166,255,0.3);border-radius:8px;
-                            padding:0.8rem 1rem;margin-bottom:1rem;
-                            background:rgba(88,166,255,0.05);font-size:0.82rem;'>
+                            padding:0.8rem 1rem;margin-bottom:1rem;background:rgba(88,166,255,0.05);font-size:0.82rem;'>
                     <div>👤 <b>{p_name}</b></div>
                     <div style='opacity:0.7;margin-top:0.2rem;'>🪪 ID: {p_id}</div>
                 </div>""", unsafe_allow_html=True)
@@ -330,11 +330,36 @@ elif page == "🔬 Predict":
                 else:
                     st.markdown(f"<div class='result-negative'><div style='font-size:2.5rem'>✅</div><p class='result-title' style='color:#3FB950'>No Heart Disease<br>Detected</p><p style='opacity:0.7'>Confidence: {1-prob:.1%}</p><p style='color:{rcolor};font-weight:600'>{risk} Risk</p></div>", unsafe_allow_html=True)
 
-                st.markdown(f"""<br>
+                # ── Risk Gauge Chart ──────────────────────
+                fig_gauge = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=round(prob*100, 1),
+                    title={'text': "Risk Score %", 'font': {'color': 'white', 'size': 13}},
+                    number={'suffix': "%", 'font': {'color': 'white'}},
+                    gauge={
+                        'axis': {'range': [0,100], 'tickcolor': 'white'},
+                        'bar':  {'color': rcolor},
+                        'steps': [
+                            {'range': [0,40],  'color': 'rgba(63,185,80,0.15)'},
+                            {'range': [40,70], 'color': 'rgba(210,153,34,0.15)'},
+                            {'range': [70,100],'color': 'rgba(230,57,70,0.15)'}
+                        ],
+                        'threshold': {
+                            'line': {'color': 'white', 'width': 3},
+                            'thickness': 0.75, 'value': 70
+                        }
+                    }
+                ))
+                fig_gauge.update_layout(
+                    height=220, margin=dict(t=30,b=0,l=20,r=20),
+                    paper_bgcolor='rgba(0,0,0,0)', font_color='white'
+                )
+                st.plotly_chart(fig_gauge, use_container_width=True)
+
+                st.markdown(f"""
                 <div style='border:1px solid rgba(128,128,128,0.2);border-radius:8px;
-                            padding:1rem;background:rgba(128,128,128,0.03);'>
-                    <p style='font-family:Space Mono,monospace;font-size:0.7rem;
-                              opacity:0.6;margin:0 0 0.5rem 0;'>PREDICTION DETAILS</p>
+                            padding:1rem;background:rgba(128,128,128,0.03);margin-top:0.5rem;'>
+                    <p style='font-family:Space Mono,monospace;font-size:0.7rem;opacity:0.6;margin:0 0 0.5rem 0;'>PREDICTION DETAILS</p>
                     <div style='font-size:0.82rem;line-height:1.8'>
                         <div>Prediction: <b style='color:#58A6FF'>{pred}</b></div>
                         <div>Probability: <b style='color:#58A6FF'>{prob:.4f}</b></div>
@@ -343,7 +368,62 @@ elif page == "🔬 Predict":
                     </div>
                 </div>""", unsafe_allow_html=True)
 
-                # ── Save to history ──────────────────────
+                # ── PDF Report ────────────────────────────
+                try:
+                    from fpdf import FPDF
+                    pdf = FPDF()
+                    pdf.add_page()
+                    pdf.set_fill_color(230, 57, 70)
+                    pdf.rect(0, 0, 210, 25, 'F')
+                    pdf.set_font("Arial", "B", 16)
+                    pdf.set_text_color(255, 255, 255)
+                    pdf.cell(0, 15, "Heart Disease Prediction Report", ln=True, align="C")
+                    pdf.set_text_color(0, 0, 0)
+                    pdf.set_font("Arial", size=11)
+                    pdf.ln(8)
+                    pdf.set_font("Arial","B",11)
+                    pdf.cell(0,8,"PATIENT INFORMATION",ln=True)
+                    pdf.set_font("Arial",size=10)
+                    pdf.cell(0,7,f"Patient Name : {p_name}",ln=True)
+                    pdf.cell(0,7,f"Patient ID   : {p_id}",ln=True)
+                    pdf.cell(0,7,f"Age          : {age} years",ln=True)
+                    pdf.cell(0,7,f"Sex          : {'Male' if sex==1 else 'Female'}",ln=True)
+                    pdf.cell(0,7,f"Doctor       : {st.session_state.get('username','')}",ln=True)
+                    pdf.cell(0,7,f"Date         : {datetime.now().strftime('%Y-%m-%d %H:%M')}",ln=True)
+                    pdf.ln(5)
+                    pdf.set_font("Arial","B",11)
+                    pdf.cell(0,8,"CLINICAL VITALS",ln=True)
+                    pdf.set_font("Arial",size=10)
+                    pdf.cell(0,7,f"Cholesterol  : {cholesterol} mg/dl",ln=True)
+                    pdf.cell(0,7,f"Resting BP   : {resting_bp} mmHg",ln=True)
+                    pdf.cell(0,7,f"Max Heart Rate: {max_hr} bpm",ln=True)
+                    pdf.cell(0,7,f"Oldpeak      : {oldpeak}",ln=True)
+                    pdf.ln(5)
+                    pdf.set_font("Arial","B",12)
+                    result_text = "HEART DISEASE DETECTED" if pred==1 else "NO HEART DISEASE"
+                    pdf.set_fill_color(230,57,70) if pred==1 else pdf.set_fill_color(63,185,80)
+                    pdf.set_text_color(255,255,255)
+                    pdf.cell(0,12,f"RESULT: {result_text}",ln=True,fill=True,align="C")
+                    pdf.set_text_color(0,0,0)
+                    pdf.set_font("Arial",size=10)
+                    pdf.ln(3)
+                    pdf.cell(0,7,f"Probability  : {prob:.1%}",ln=True)
+                    pdf.cell(0,7,f"Risk Level   : {risk}",ln=True)
+                    pdf.ln(8)
+                    pdf.set_font("Arial","I",8)
+                    pdf.set_text_color(128,128,128)
+                    pdf.cell(0,6,"Generated by ModelOps Framework for Heart Disease Prediction",ln=True,align="C")
+                    pdf_bytes = bytes(pdf.output())
+                    st.download_button(
+                        label="📄 Download PDF Report",
+                        data=pdf_bytes,
+                        file_name=f"report_{p_id}_{datetime.now().strftime('%Y%m%d')}.pdf",
+                        mime="application/pdf"
+                    )
+                except Exception as e:
+                    st.warning(f"PDF generation failed: {e}")
+
+                # ── Save to history ───────────────────────
                 history_file = "prediction_history.csv"
                 new_record = pd.DataFrame([{
                     "Date":         datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -364,8 +444,7 @@ elif page == "🔬 Predict":
                     new_record.to_csv(history_file, mode='a', header=False, index=False)
                 else:
                     new_record.to_csv(history_file, mode='w', header=True, index=False)
-
-                st.success("✅ Prediction saved to history!")
+                st.success("✅ Saved to history")
         else:
             st.markdown("""
             <div style='border:1px dashed rgba(128,128,128,0.3);border-radius:10px;
@@ -466,22 +545,79 @@ elif page == "📋 History":
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # ── Filter by doctor ──────────────────────────────
-        col_filter, col_clear = st.columns([3,1])
-        with col_filter:
+        # ── Charts ────────────────────────────────────────
+        st.markdown("<p class='section-header'>Analytics</p>", unsafe_allow_html=True)
+        ch1, ch2, ch3 = st.columns(3)
+
+        with ch1:
+            fig_pie = go.Figure(go.Pie(
+                labels=['Heart Disease','No Disease'],
+                values=[disease, no_disease],
+                marker_colors=['#E63946','#3FB950'],
+                hole=0.45
+            ))
+            fig_pie.update_layout(
+                title='Disease Distribution', paper_bgcolor='rgba(0,0,0,0)',
+                font_color='white', height=260, margin=dict(t=40,b=0,l=0,r=0)
+            )
+            st.plotly_chart(fig_pie, use_container_width=True)
+
+        with ch2:
+            risk_counts = df_history['Risk'].value_counts().reindex(['High','Medium','Low'], fill_value=0)
+            fig_risk = go.Figure(go.Bar(
+                x=risk_counts.index, y=risk_counts.values,
+                marker_color=['#E63946','#D29922','#3FB950'],
+                text=risk_counts.values, textposition='outside'
+            ))
+            fig_risk.update_layout(
+                title='Risk Level Distribution', paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)', font_color='white',
+                height=260, margin=dict(t=40,b=0,l=0,r=0),
+                yaxis=dict(gridcolor='rgba(128,128,128,0.1)')
+            )
+            st.plotly_chart(fig_risk, use_container_width=True)
+
+        with ch3:
+            if 'Age' in df_history.columns and len(df_history) > 0:
+                df_history['Age Group'] = pd.cut(
+                    df_history['Age'].astype(int),
+                    bins=[0,40,50,60,70,100],
+                    labels=['<40','40-50','50-60','60-70','70+']
+                )
+                age_counts = df_history[df_history['Result']=='Heart Disease']['Age Group'].value_counts().sort_index()
+                fig_age = go.Figure(go.Bar(
+                    x=age_counts.index.astype(str), y=age_counts.values,
+                    marker_color='#E63946', text=age_counts.values, textposition='outside'
+                ))
+                fig_age.update_layout(
+                    title='Disease by Age Group', paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)', font_color='white',
+                    height=260, margin=dict(t=40,b=0,l=0,r=0),
+                    yaxis=dict(gridcolor='rgba(128,128,128,0.1)')
+                )
+                st.plotly_chart(fig_age, use_container_width=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # ── Search + Filter ───────────────────────────────
+        st.markdown("<p class='section-header'>Patient Records</p>", unsafe_allow_html=True)
+        sf1, sf2 = st.columns([2,1])
+        with sf1:
+            search = st.text_input("🔍 Search by Patient Name or ID", placeholder="Type name or ID...")
+        with sf2:
             doctors = ["All Doctors"] + list(df_history["Doctor"].unique())
-            selected_doctor = st.selectbox("Filter by Doctor", doctors, key="filter_doctor")
-        with col_clear:
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🔄 Refresh"):
-                st.rerun()
+            selected_doctor = st.selectbox("Filter by Doctor", doctors)
 
+        df_display = df_history.copy()
+        if search:
+            df_display = df_display[
+                df_display['Patient Name'].str.contains(search, case=False, na=False) |
+                df_display['Patient ID'].str.contains(search, case=False, na=False)
+            ]
+            st.markdown(f"<div style='font-size:0.8rem;opacity:0.7;margin-bottom:0.5rem;'>Found {len(df_display)} result(s)</div>", unsafe_allow_html=True)
         if selected_doctor != "All Doctors":
-            df_display = df_history[df_history["Doctor"] == selected_doctor]
-        else:
-            df_display = df_history
+            df_display = df_display[df_display["Doctor"] == selected_doctor]
 
-        st.markdown("<p class='section-header'>All Predictions</p>", unsafe_allow_html=True)
         st.dataframe(df_display, use_container_width=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
